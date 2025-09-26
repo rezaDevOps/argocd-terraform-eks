@@ -1,0 +1,69 @@
+# Development Environment Configuration
+# This file customizes which applications are deployed in the dev environment
+
+# Infrastructure Applications - Essential only for dev
+infrastructure:
+  cert-manager:
+    enabled: false  # Skip for dev to save resources
+    
+  external-secrets:
+    enabled: false  # Skip for dev
+    
+  ingress-nginx:
+    enabled: true   # Keep for testing ingress
+
+# Platform Applications - Minimal for dev
+platform:
+  monitoring:
+    enabled: false  # Too resource intensive for dev
+    
+  logging:
+    enabled: false  # Skip for dev
+
+# Business Applications - Enable all for testing
+applications:
+  guestbook:
+    enabled: true
+    namespace: guestbook
+    syncWave: 1
+    helm:
+      values: |
+        environment: dev
+        guestbook:
+          frontend:
+            replicas: 1
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+          backend:
+            replicas: 1
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+          database:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+        ingress:
+          enabled: true
+          hostname: guestbook-dev.example.com
+          tls:
+            enabled: false  # Skip TLS for dev
+
+# Global overrides for development
+global:
+  environment: dev
+  repository:
+    url: "https://github.com/rezaDevOps/argocd-terraform-eks.git"

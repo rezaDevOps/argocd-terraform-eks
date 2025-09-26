@@ -1,0 +1,70 @@
+# Staging Environment Configuration
+# This file customizes which applications are deployed in the staging environment
+
+# Infrastructure Applications - Most enabled for staging
+infrastructure:
+  cert-manager:
+    enabled: true   # Enable TLS certificates
+    
+  external-secrets:
+    enabled: false  # Can enable if needed
+    
+  ingress-nginx:
+    enabled: true   # Essential for staging
+
+# Platform Applications - Enable monitoring for staging
+platform:
+  monitoring:
+    enabled: true   # Enable monitoring stack
+    
+  logging:
+    enabled: false  # Can enable if needed
+
+# Business Applications - Production-like configuration
+applications:
+  guestbook:
+    enabled: true
+    namespace: guestbook
+    syncWave: 1
+    helm:
+      values: |
+        environment: staging
+        guestbook:
+          frontend:
+            replicas: 2
+            resources:
+              requests:
+                cpu: 200m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+          backend:
+            replicas: 2
+            resources:
+              requests:
+                cpu: 200m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+          database:
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+        ingress:
+          enabled: true
+          hostname: guestbook-staging.example.com
+          tls:
+            enabled: true
+            secretName: guestbook-staging-tls
+
+# Global overrides for staging
+global:
+  environment: staging
+  repository:
+    url: "https://github.com/your-org/gitops-repo.git"

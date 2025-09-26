@@ -1,0 +1,106 @@
+global:
+  image:
+    tag: "v2.8.4"
+
+configs:
+  cm:
+    application.instanceLabelKey: argocd.argoproj.io/instance
+    server.rbac.log.enforce.enable: "true"
+    exec.enabled: "true"
+    admin.enabled: "true"
+
+    # Git repository configuration
+    repositories: |
+      - type: git
+        url: https://github.com/rezaDevOps/argocd-terraform-eks.git
+        name: gitops-repo
+
+  rbac:
+    policy.csv: |
+      # Admin role for platform team
+      p, role:admin, applications, *, *, allow
+      p, role:admin, clusters, *, *, allow
+      p, role:admin, repositories, *, *, allow
+      p, role:admin, projects, *, *, allow
+
+      # Developer role - limited access
+      p, role:developer, applications, get, dev/*, allow
+      p, role:developer, applications, sync, dev/*, allow
+      p, role:developer, applications, action/*, dev/*, allow
+      p, role:developer, logs, get, dev/*, allow
+      p, role:developer, exec, create, dev/*, allow
+
+      # ReadOnly role
+      p, role:readonly, applications, get, *, allow
+      p, role:readonly, certificates, get, *, allow
+      p, role:readonly, clusters, get, *, allow
+      p, role:readonly, repositories, get, *, allow
+      p, role:readonly, projects, get, *, allow
+      p, role:readonly, logs, get, *, allow
+
+      # Default groups
+      g, argocd-admins, role:admin
+      g, argocd-developers, role:developer
+      g, argocd-readonly, role:readonly
+
+    scopes: '[groups, email]'
+    policy.default: role:readonly
+
+controller:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+  metrics:
+    enabled: true
+
+server:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  service:
+    type: ClusterIP
+
+  # Allow insecure connections for port-forward
+  extraArgs:
+    - --insecure
+
+repoServer:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+applicationSet:
+  enabled: true
+  replicas: 1
+
+notifications:
+  enabled: true
+
+redis:
+  enabled: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+dex:
+  enabled: false

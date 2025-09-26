@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps-prod
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: app-of-apps
+    app.kubernetes.io/instance: prod
+    app.kubernetes.io/managed-by: argocd
+    environment: prod
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/gitops-repo.git
+    targetRevision: HEAD
+    path: apps
+    helm:
+      valueFiles:
+        - ../environments/prod/values.yaml
+      values: |
+        global:
+          environment: prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: false  # Manual sync for production safety
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m

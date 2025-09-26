@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "hashicorp.terraform",
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "redhat.vscode-yaml",
+    "ms-vscode.vscode-json",
+    "ms-python.python",
+    "streetsidesoftware.code-spell-checker",
+    "ms-vscode.docker",
+    "ms-azuretools.vscode-docker",
+    "formulahendry.auto-rename-tag",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "ms-vsliveshare.vsliveshare",
+    "github.copilot"
+  ]
+}

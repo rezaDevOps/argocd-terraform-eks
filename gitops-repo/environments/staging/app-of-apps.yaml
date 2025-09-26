@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps-staging
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: app-of-apps
+    app.kubernetes.io/instance: staging
+    app.kubernetes.io/managed-by: argocd
+    environment: staging
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/gitops-repo.git
+    targetRevision: HEAD
+    path: apps
+    helm:
+      valueFiles:
+        - ../environments/staging/values.yaml
+      values: |
+        global:
+          environment: staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

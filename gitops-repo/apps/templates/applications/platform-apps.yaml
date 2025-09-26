@@ -1,0 +1,48 @@
+{{/*
+App-of-Apps Platform Applications
+These applications are deployed after infrastructure with sync wave 0
+*/}}
+{{- range $name, $config := .Values.platform }}
+{{- if $config.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $name }}-{{ $.Values.global.environment | default "dev" }}
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/part-of: platform
+    app.kubernetes.io/managed-by: argocd
+    environment: {{ $.Values.global.environment | default "dev" }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "{{ $config.syncWave | default 0 }}"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ $.Values.global.repository.url }}
+    targetRevision: {{ $config.targetRevision | default "HEAD" }}
+    path: {{ $config.path }}
+  destination:
+    server: {{ $.Values.global.destination.server }}
+    namespace: {{ $config.namespace }}
+  syncPolicy:
+    {{- if $.Values.global.syncPolicy.automated }}
+    automated:
+      prune: {{ $.Values.global.syncPolicy.automated.prune }}
+      selfHeal: {{ $.Values.global.syncPolicy.automated.selfHeal }}
+    {{- end }}
+    syncOptions:
+      {{- range $.Values.global.syncPolicy.syncOptions }}
+      - {{ . }}
+      {{- end }}
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+{{- end }}
+{{- end }}

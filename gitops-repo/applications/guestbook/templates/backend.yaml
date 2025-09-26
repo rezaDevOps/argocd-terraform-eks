@@ -1,0 +1,140 @@
+{{/*
+Guestbook Backend API Component
+Sync Wave: 2 (deployed after database)
+*/}}
+{{- if .Values.backend.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.backend.name }}
+  namespace: {{ .Values.global.namespace | default "guestbook" }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.backend.name }}
+    app.kubernetes.io/component: backend
+    environment: {{ .Values.environment }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    app.kubernetes.io/name: {{ .Values.backend.name }}
+  ports:
+    - port: {{ .Values.backend.service.port }}
+      targetPort: {{ .Values.backend.service.targetPort }}
+      protocol: TCP
+      name: http
+  type: {{ .Values.backend.service.type }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.name }}
+  namespace: {{ .Values.global.namespace | default "guestbook" }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.backend.name }}
+    app.kubernetes.io/component: backend
+    environment: {{ .Values.environment }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.backend.name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.backend.name }}
+        app.kubernetes.io/component: backend
+        environment: {{ .Values.environment }}
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.service.targetPort }}
+              name: http
+              protocol: TCP
+          env:
+            {{- range .Values.backend.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          {{- if .Values.backend.healthcheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backend.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.backend.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.healthcheck.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.backend.healthcheck.path }}
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          {{- end }}
+      restartPolicy: Always
+
+{{- if and .Values.hpa.enabled .Values.backend.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.backend.name }}-hpa
+  namespace: {{ .Values.global.namespace | default "guestbook" }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.backend.name }}
+    app.kubernetes.io/component: backend
+    environment: {{ .Values.environment }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.backend.name }}
+  minReplicas: {{ .Values.hpa.minReplicas }}
+  maxReplicas: {{ .Values.hpa.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.hpa.targetCPUUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.hpa.targetMemoryUtilizationPercentage }}
+{{- end }}
+
+{{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.backend.name }}-metrics
+  namespace: {{ .Values.global.namespace | default "guestbook" }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.backend.name }}
+    app.kubernetes.io/component: backend
+    environment: {{ .Values.environment }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.backend.name }}
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+{{- end }}
+{{- end }}

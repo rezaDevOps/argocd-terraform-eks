@@ -1,0 +1,157 @@
+# Guestbook Application Configuration
+# This is a sample microservices application with database, backend, and frontend
+
+# Global configuration
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Environment configuration
+environment: dev
+
+# Database configuration (Redis)
+database:
+  enabled: true
+  name: redis
+  image:
+    repository: redis
+    tag: "7.2-alpine"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 6379
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  
+  persistence:
+    enabled: true
+    size: 8Gi
+    accessMode: ReadWriteOnce
+  
+  # Redis configuration
+  config:
+    maxmemory: "200mb"
+    maxmemoryPolicy: "allkeys-lru"
+
+# Backend API configuration
+backend:
+  enabled: true
+  name: guestbook-backend
+  
+  image:
+    repository: gcr.io/heptio-images/ks-guestbook-demo
+    tag: "0.2"
+    pullPolicy: IfNotPresent
+  
+  replicas: 1
+  
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  
+  # Environment variables
+  env:
+    - name: GET_HOSTS_FROM
+      value: "dns"
+    - name: REDIS_HOST
+      value: "guestbook-redis"
+    - name: REDIS_PORT
+      value: "6379"
+  
+  # Health checks
+  healthcheck:
+    enabled: true
+    path: /healthz
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+# Frontend configuration
+frontend:
+  enabled: true
+  name: guestbook-frontend
+  
+  image:
+    repository: gcr.io/heptio-images/ks-guestbook-demo
+    tag: "0.2"
+    pullPolicy: IfNotPresent
+  
+  replicas: 1
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  
+  # Environment variables
+  env:
+    - name: GET_HOSTS_FROM
+      value: "dns"
+    - name: GUESTBOOK_API_ADDR
+      value: "guestbook-backend:3000"
+  
+  # Health checks
+  healthcheck:
+    enabled: true
+    path: /
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  
+  hostname: guestbook.example.com
+  
+  tls:
+    enabled: false
+    secretName: guestbook-tls
+
+# Horizontal Pod Autoscaler
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Service Monitor for Prometheus
+monitoring:
+  enabled: false
+  serviceMonitor: false
+
+# Network Policies
+networkPolicies:
+  enabled: false
+
+# Pod Security Standards
+podSecurityStandards:
+  enforced: "baseline"

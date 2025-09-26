@@ -1,0 +1,80 @@
+# App-of-Apps Configuration
+# This file defines which applications should be deployed and their configuration
+
+# Infrastructure Applications (deployed first with negative sync waves)
+infrastructure:
+  cert-manager:
+    enabled: true
+    namespace: cert-manager
+    syncWave: -2
+    targetRevision: HEAD
+    path: applications/infrastructure/cert-manager
+    
+  external-secrets:
+    enabled: true
+    namespace: external-secrets-system
+    syncWave: -1
+    targetRevision: HEAD
+    path: applications/infrastructure/external-secrets
+    
+  ingress-nginx:
+    enabled: true
+    namespace: ingress-nginx
+    syncWave: -1
+    targetRevision: HEAD
+    path: applications/infrastructure/ingress-nginx
+
+# Platform Applications (deployed with sync wave 0)
+platform:
+  monitoring:
+    enabled: false  # Set to true if you want monitoring stack
+    namespace: monitoring
+    syncWave: 0
+    targetRevision: HEAD
+    path: applications/platform/monitoring
+    
+  logging:
+    enabled: false  # Set to true if you want logging stack
+    namespace: logging
+    syncWave: 0
+    targetRevision: HEAD
+    path: applications/platform/logging
+
+# Business Applications (deployed last with positive sync waves)
+applications:
+  guestbook:
+    enabled: true
+    namespace: guestbook
+    syncWave: 1
+    targetRevision: HEAD
+    path: gitops-repo/applications/guestbook
+    components:
+      database:
+        enabled: true
+        syncWave: 1
+      backend:
+        enabled: true
+        syncWave: 2
+      frontend:
+        enabled: true
+        syncWave: 3
+
+# Global configuration
+global:
+  # Git repository configuration
+  repository:
+    url: "https://github.com/rezaDevOps/argocd-terraform-eks.git"
+    
+  # Target cluster
+  destination:
+    server: "https://kubernetes.default.svc"
+    
+  # Default sync policy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true

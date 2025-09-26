@@ -1,0 +1,73 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+terraform.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# IDEs
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Helm
+charts/
+Chart.lock
+
+# ArgoCD
+argocd-password.txt
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Secrets
+*.key
+*.pem
+*.crt
+secrets.yaml
+secret.yaml

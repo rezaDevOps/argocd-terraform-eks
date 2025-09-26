@@ -1,0 +1,158 @@
+global:
+  image:
+    tag: "v2.8.4"
+
+configs:
+  cm:
+    url: "https://argocd.${domain_name}"
+    application.instanceLabelKey: argocd.argoproj.io/instance
+    server.rbac.log.enforce.enable: "true"
+    exec.enabled: "true"
+    admin.enabled: "false"
+    
+    # Git repository configuration
+    repositories: |
+      - type: git
+        url: ${gitops_repo_url}
+        name: gitops-repo
+    
+  rbac:
+    policy.csv: |
+      # Admin role for platform team
+      p, role:admin, applications, *, *, allow
+      p, role:admin, clusters, *, *, allow
+      p, role:admin, repositories, *, *, allow
+      p, role:admin, projects, *, *, allow
+      
+      # Developer role - limited access
+      p, role:developer, applications, get, ${environment}/*, allow
+      p, role:developer, applications, sync, ${environment}/*, allow
+      p, role:developer, applications, action/*, ${environment}/*, allow
+      p, role:developer, logs, get, ${environment}/*, allow
+      p, role:developer, exec, create, ${environment}/*, allow
+      
+      # ReadOnly role
+      p, role:readonly, applications, get, *, allow
+      p, role:readonly, certificates, get, *, allow
+      p, role:readonly, clusters, get, *, allow
+      p, role:readonly, repositories, get, *, allow
+      p, role:readonly, projects, get, *, allow
+      p, role:readonly, logs, get, *, allow
+      
+      # Default groups
+      g, argocd-admins, role:admin
+      g, argocd-developers, role:developer
+      g, argocd-readonly, role:readonly
+      
+    scopes: '[groups, email]'
+    policy.default: role:readonly
+
+controller:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  
+  # Service account with IRSA
+  serviceAccount:
+    create: true
+    name: "argocd-application-controller"
+    annotations:
+      eks.amazonaws.com/role-arn: "${app_controller_role_arn}"
+
+server:
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  service:
+    type: ClusterIP
+    portName: grpc
+    annotations: {}
+    
+  ingress:
+    enabled: false
+    
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  
+  # Service account with IRSA
+  serviceAccount:
+    create: true
+    name: "argocd-server"
+    annotations:
+      eks.amazonaws.com/role-arn: "${server_role_arn}"
+
+repoServer:
+  replicas: 2
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+applicationSet:
+  enabled: true
+  replicas: 2
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+notifications:
+  enabled: true
+  argocdUrl: "https://argocd.${domain_name}"
+
+redis:
+  enabled: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+# Additional configuration for App-of-Apps pattern
+dex:
+  enabled: false
+
+# Server configuration for port-forward access
+server:
+  service:
+    type: ClusterIP
+  
+  # Allow insecure connections for port-forward
+  extraArgs:
+    - --insecure

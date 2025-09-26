@@ -1,0 +1,33 @@
+# Core Configuration
+aws_region   = "us-west-2"
+project_name = "argocd-terraform"
+
+# GitOps Configuration - PLEASE UPDATE THESE VALUES
+gitops_repo_url = "https://github.com/your-org/gitops-repo.git"
+domain_name     = "example.com"
+
+# EKS Addons (Enable what you need for development)
+enable_aws_load_balancer_controller = true
+enable_external_dns                 = true
+enable_cert_manager                  = true
+enable_cluster_autoscaler           = true
+enable_metrics_server              = true
+enable_prometheus                  = false  # Set to true if you want monitoring
+
+# IAM Users (optional - add your team members)
+aws_auth_users = [
+  # {
+  #   userarn  = "arn:aws:iam::123456789012:user/developer1"
+  #   username = "developer1"
+  #   groups   = ["system:masters"]
+  # }
+]
+
+# Note: The following are set automatically for dev environment:
+# - cluster_name = "argocd-terraform-dev"
+# - environment = "dev"
+# - node_group_instance_types = ["t3.medium"]  # Smaller instances for cost savings
+# - single_nat_gateway = true                  # Cost optimization
+# - node_group_desired_size = 2
+# - node_group_min_size = 1
+# - node_group_max_size = 5

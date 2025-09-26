@@ -1,0 +1,38 @@
+# Core Configuration
+aws_region   = "us-west-2"
+project_name = "argocd-terraform"
+
+# GitOps Configuration - PLEASE UPDATE THESE VALUES
+gitops_repo_url = "https://github.com/your-org/gitops-repo.git"
+domain_name     = "prod.example.com"
+
+# EKS Addons (All enabled for production)
+enable_aws_load_balancer_controller = true
+enable_external_dns                 = true
+enable_cert_manager                  = true
+enable_cluster_autoscaler           = true
+enable_metrics_server              = true
+enable_prometheus                  = true  # Always enabled in production
+
+# IAM Users (Carefully manage production access)
+aws_auth_users = [
+  # {
+  #   userarn  = "arn:aws:iam::123456789012:user/prod-admin"
+  #   username = "prod-admin"
+  #   groups   = ["system:masters"]
+  # },
+  # {
+  #   userarn  = "arn:aws:iam::123456789012:user/prod-readonly"
+  #   username = "prod-readonly"
+  #   groups   = ["argocd-readonly"]
+  # }
+]
+
+# Note: The following are set automatically for production environment:
+# - cluster_name = "argocd-terraform-prod"
+# - environment = "prod"
+# - node_group_instance_types = ["m5.xlarge", "m5.large"]  # High performance
+# - single_nat_gateway = false                             # HA required
+# - node_group_desired_size = 5
+# - node_group_min_size = 3
+# - node_group_max_size = 20

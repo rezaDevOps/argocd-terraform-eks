@@ -1,0 +1,31 @@
+# Example: ArgoCD Ingress with AWS ALB
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-ingress
+  namespace: argocd
+  annotations:
+    # AWS Load Balancer Controller annotations
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:YOUR_ACCOUNT_ID:certificate/YOUR_CERT_ID
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # ArgoCD specific annotations
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/conditions.argocd-server: |
+      [{"field":"host-header","hostHeaderConfig":{"values":["argocd.example.com"]}}]
+spec:
+  rules:
+  - host: argocd.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 443

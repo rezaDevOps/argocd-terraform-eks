@@ -1,0 +1,13 @@
+apiVersion: v2
+name: app-of-apps
+description: Root application for App-of-Apps pattern managing all applications in the cluster
+type: application
+version: 0.1.0
+appVersion: "1.0"
+keywords:
+  - argocd
+  - gitops
+  - app-of-apps
+maintainers:
+  - name: Platform Team
+    email: platform@example.com

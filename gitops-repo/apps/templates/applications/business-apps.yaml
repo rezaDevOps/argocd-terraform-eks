@@ -1,0 +1,61 @@
+{{/*
+App-of-Apps Business Applications
+These applications are deployed last with positive sync waves
+*/}}
+{{- range $name, $config := .Values.applications }}
+{{- if $config.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $name }}-{{ $.Values.global.environment | default "dev" }}
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/part-of: applications
+    app.kubernetes.io/managed-by: argocd
+    environment: {{ $.Values.global.environment | default "dev" }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "{{ $config.syncWave | default 1 }}"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ $.Values.global.repository.url }}
+    targetRevision: {{ $config.targetRevision | default "HEAD" }}
+    path: {{ $config.path }}
+    {{- if $config.helm }}
+    helm:
+      {{- if $config.helm.values }}
+      values: |
+{{ $config.helm.values | indent 8 }}
+      {{- end }}
+      {{- if $config.helm.valueFiles }}
+      valueFiles:
+        {{- range $config.helm.valueFiles }}
+        - {{ . }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  destination:
+    server: {{ $.Values.global.destination.server }}
+    namespace: {{ $config.namespace }}
+  syncPolicy:
+    {{- if $.Values.global.syncPolicy.automated }}
+    automated:
+      prune: {{ $.Values.global.syncPolicy.automated.prune }}
+      selfHeal: {{ $.Values.global.syncPolicy.automated.selfHeal }}
+    {{- end }}
+    syncOptions:
+      {{- range $.Values.global.syncPolicy.syncOptions }}
+      - {{ . }}
+      {{- end }}
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+{{- end }}
+{{- end }}

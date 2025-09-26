@@ -1,0 +1,87 @@
+# Production Environment Configuration
+# This file customizes which applications are deployed in the production environment
+
+# Infrastructure Applications - All enabled for production
+infrastructure:
+  cert-manager:
+    enabled: true   # Essential for production TLS
+    
+  external-secrets:
+    enabled: true   # Enable for production secrets management
+    
+  ingress-nginx:
+    enabled: true   # Essential for production
+
+# Platform Applications - Full monitoring and logging
+platform:
+  monitoring:
+    enabled: true   # Full monitoring stack required
+    
+  logging:
+    enabled: true   # Full logging stack required
+
+# Business Applications - Production configuration with HA
+applications:
+  guestbook:
+    enabled: true
+    namespace: guestbook
+    syncWave: 1
+    helm:
+      values: |
+        environment: prod
+        guestbook:
+          frontend:
+            replicas: 3
+            resources:
+              requests:
+                cpu: 500m
+                memory: 512Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+            hpa:
+              enabled: true
+              minReplicas: 3
+              maxReplicas: 10
+              targetCPUUtilizationPercentage: 70
+          backend:
+            replicas: 3
+            resources:
+              requests:
+                cpu: 500m
+                memory: 512Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+            hpa:
+              enabled: true
+              minReplicas: 3
+              maxReplicas: 10
+              targetCPUUtilizationPercentage: 70
+          database:
+            replicas: 3  # Redis cluster
+            resources:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                cpu: 1000m
+                memory: 2Gi
+        ingress:
+          enabled: true
+          hostname: guestbook.example.com
+          tls:
+            enabled: true
+            secretName: guestbook-prod-tls
+        monitoring:
+          enabled: true
+          serviceMonitor: true
+        security:
+          networkPolicies: true
+          podSecurityStandards: restricted
+
+# Global overrides for production
+global:
+  environment: prod
+  repository:
+    url: "https://github.com/your-org/gitops-repo.git"

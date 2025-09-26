@@ -45,10 +45,10 @@ database:
 backend:
   enabled: true
   name: guestbook-backend
-  
+
   image:
-    repository: gcr.io/heptio-images/ks-guestbook-demo
-    tag: "0.2"
+    repository: paulbouwer/hello-kubernetes
+    tag: "1.10"
     pullPolicy: IfNotPresent
   
   replicas: 1
@@ -86,10 +86,10 @@ backend:
 frontend:
   enabled: true
   name: guestbook-frontend
-  
+
   image:
-    repository: gcr.io/heptio-images/ks-guestbook-demo
-    tag: "0.2"
+    repository: paulbouwer/hello-kubernetes
+    tag: "1.10"
     pullPolicy: IfNotPresent
   
   replicas: 1

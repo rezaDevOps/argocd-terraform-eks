@@ -56,7 +56,7 @@ backend:
   service:
     type: ClusterIP
     port: 3000
-    targetPort: 3000
+    targetPort: 8080
   
   resources:
     requests:
@@ -71,15 +71,15 @@ backend:
     - name: GET_HOSTS_FROM
       value: "dns"
     - name: REDIS_HOST
-      value: "guestbook-redis"
+      value: "redis"
     - name: REDIS_PORT
       value: "6379"
-  
+
   # Health checks
   healthcheck:
     enabled: true
-    path: /healthz
-    initialDelaySeconds: 30
+    path: /
+    initialDelaySeconds: 10
     periodSeconds: 10
 
 # Frontend configuration
@@ -97,7 +97,7 @@ frontend:
   service:
     type: ClusterIP
     port: 80
-    targetPort: 80
+    targetPort: 8080
   
   resources:
     requests:
@@ -111,14 +111,14 @@ frontend:
   env:
     - name: GET_HOSTS_FROM
       value: "dns"
-    - name: GUESTBOOK_API_ADDR
-      value: "guestbook-backend:3000"
-  
+    - name: MESSAGE
+      value: "Hello from Guestbook Frontend!"
+
   # Health checks
   healthcheck:
     enabled: true
     path: /
-    initialDelaySeconds: 30
+    initialDelaySeconds: 10
     periodSeconds: 10
 
 # Ingress configuration

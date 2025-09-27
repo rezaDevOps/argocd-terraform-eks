@@ -23,7 +23,7 @@ output "application_controller_role_arn" {
   value       = module.argocd_application_controller_irsa.iam_role_arn
 }
 
-# output "root_application_name" {
-#   description = "Root application name"
-#   value       = kubernetes_manifest.root_app.manifest.metadata.name
-# }
+output "root_application_name" {
+  description = "Root application name"
+  value       = kubernetes_manifest.root_app.manifest.metadata.name
+}

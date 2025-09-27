@@ -37,39 +37,39 @@ resource "time_sleep" "wait_for_argocd" {
 # ArgoCD root application (App of Apps)
 # Note: Commented out during initial bootstrap to avoid chicken-egg problem
 # Uncomment after cluster is created and configured
-# resource "kubernetes_manifest" "root_app" {
-#   depends_on = [time_sleep.wait_for_argocd]
-#   
-#   manifest = {
-#     apiVersion = "argoproj.io/v1alpha1"
-#     kind       = "Application"
-#     metadata = {
-#       name      = "app-of-apps-${var.environment}"
-#       namespace = "argocd"
-#       finalizers = [
-#         "resources-finalizer.argocd.argoproj.io"
-#       ]
-#     }
-#     spec = {
-#       project = "default"
-#       source = {
-#         repoURL        = var.gitops_repo_url
-#         targetRevision = "HEAD"
-#         path           = "environments/${var.environment}"
-#       }
-#       destination = {
-#         server    = "https://kubernetes.default.svc"
-#         namespace = "argocd"
-#       }
-#       syncPolicy = {
-#         automated = {
-#           prune    = true
-#           selfHeal = true
-#         }
-#         syncOptions = [
-#           "CreateNamespace=true"
-#         ]
-#       }
-#     }
-#   }
-# }
+resource "kubernetes_manifest" "root_app" {
+  depends_on = [time_sleep.wait_for_argocd]
+  
+  manifest = {
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "Application"
+    metadata = {
+      name      = "app-of-apps-${var.environment}"
+      namespace = "argocd"
+      finalizers = [
+        "resources-finalizer.argocd.argoproj.io"
+      ]
+    }
+    spec = {
+      project = "default"
+      source = {
+        repoURL        = var.gitops_repo_url
+        targetRevision = "HEAD"
+        path           = "environments/${var.environment}"
+      }
+      destination = {
+        server    = "https://kubernetes.default.svc"
+        namespace = "argocd"
+      }
+      syncPolicy = {
+        automated = {
+          prune    = true
+          selfHeal = true
+        }
+        syncOptions = [
+          "CreateNamespace=true"
+        ]
+      }
+    }
+  }
+}

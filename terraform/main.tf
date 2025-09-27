@@ -365,28 +365,28 @@ module "argocd" {
 # GitOps Bridge Metadata
 # Note: Commented out during initial bootstrap to avoid chicken-egg problem
 # Uncomment after cluster is created and kubectl is configured
-# resource "kubernetes_config_map" "argocd_metadata" {
-#   metadata {
-#     name      = "argocd-metadata"
-#     namespace = "argocd"
-#   }
-#
-#   data = {
-#     "aws_account_id"        = data.aws_caller_identity.current.account_id
-#     "aws_region"            = var.aws_region
-#     "aws_partition"         = data.aws_partition.current.partition
-#     "cluster_name"          = var.cluster_name
-#     "cluster_endpoint"      = module.eks.cluster_endpoint
-#     "cluster_arn"           = module.eks.cluster_arn
-#     "oidc_provider_arn"     = module.eks.oidc_provider_arn
-#     "environment"           = var.environment
-#     "vpc_id"                = module.vpc.vpc_id
-#     "private_subnets"       = jsonencode(module.vpc.private_subnets)
-#     "public_subnets"        = jsonencode(module.vpc.public_subnets)
-#     "load_balancer_controller_role_arn" = module.eks_addons.aws_load_balancer_controller_role_arn
-#     "external_dns_role_arn" = module.eks_addons.external_dns_role_arn
-#     "cert_manager_role_arn" = module.eks_addons.cert_manager_role_arn
-#   }
-#
-#   depends_on = [module.argocd]
-# }
+resource "kubernetes_config_map" "argocd_metadata" {
+  metadata {
+    name      = "argocd-metadata"
+    namespace = "argocd"
+  }
+
+  data = {
+    "aws_account_id"        = data.aws_caller_identity.current.account_id
+    "aws_region"            = var.aws_region
+    "aws_partition"         = data.aws_partition.current.partition
+    "cluster_name"          = var.cluster_name
+    "cluster_endpoint"      = module.eks.cluster_endpoint
+    "cluster_arn"           = module.eks.cluster_arn
+    "oidc_provider_arn"     = module.eks.oidc_provider_arn
+    "environment"           = var.environment
+    "vpc_id"                = module.vpc.vpc_id
+    "private_subnets"       = jsonencode(module.vpc.private_subnets)
+    "public_subnets"        = jsonencode(module.vpc.public_subnets)
+    "load_balancer_controller_role_arn" = module.eks_addons.aws_load_balancer_controller_role_arn
+    "external_dns_role_arn" = module.eks_addons.external_dns_role_arn
+    "cert_manager_role_arn" = module.eks_addons.cert_manager_role_arn
+  }
+
+  depends_on = [module.argocd]
+}
